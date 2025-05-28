@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teachable Machine - صورة من الجهاز</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f4f8;
+      text-align: center;
+      padding: 40px;
+    }
+
+    input[type="file"] {
+      margin-top: 20px;
+    }
+
+    img {
+      margin-top: 20px;
+      max-width: 300px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+
+    #label-container {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>📷 Teachable Machine Image Classifier</h1>
+  <input type="file" accept="image/*" onchange="handleUpload(event)">
+  <div><img id="uploaded-image" /></div>
+  <div id="label-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+  <script>
+    const URL = "./my_model/";
+    let model, labelContainer, maxPredictions;
+
+    async function loadModel() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+      labelContainer = document.getElementById("label-container");
+    }
+
+    async function handleUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const img = document.getElementById("uploaded-image");
+      img.src = URL.createObjectURL(file);
+      img.onload = async () => {
+        const prediction = await model.predict(img);
+        labelContainer.innerHTML = "";
+        for (let i = 0; i < maxPredictions; i++) {
+          const classPrediction = prediction[i].className + ": " +
+                                  (prediction[i].probability * 100).toFixed(1) + "%";
+          const div = document.createElement("div");
+          div.innerText = classPrediction;
+          labelContainer.appendChild(div);
+        }
+      };
+    }
+
+    loadModel();
+  </script>
+</body>
+</html>
